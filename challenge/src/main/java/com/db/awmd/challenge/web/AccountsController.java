@@ -58,7 +58,7 @@ public class AccountsController {
   }
 
   @PostMapping("/transfer") //new EndPoint Created
-  public ResponseEntity<AmountTransferResponse> amountTransfer(@RequestBody AmountTransferRequest amountTransferRequest) {
+  public ResponseEntity<?> amountTransfer(@RequestBody AmountTransferRequest amountTransferRequest) {
       log.info("Got Amount transfer request  {}", amountTransferRequest.toString());
       return ResponseEntity.ok(amountTransferService.fundTransfer(amountTransferRequest.getFromAccount(),amountTransferRequest.getToAccount(),
     		  amountTransferRequest.getAmount()));

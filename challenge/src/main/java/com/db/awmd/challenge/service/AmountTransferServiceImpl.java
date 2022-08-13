@@ -7,6 +7,7 @@ import javax.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ObjectUtils;
 
 import com.db.awmd.Ichallenge.service.AmountTransferService;
 import com.db.awmd.challenge.domain.Account;
@@ -27,9 +28,10 @@ public class AmountTransferServiceImpl implements AmountTransferService {
 	NotificationService notificationService;
 
 	@Override
-	// @Transactional(isolation = REPEATABLE_READ) //will use this annotation for getting updated amount
+	// @Transactional(isolation = REPEATABLE_READ) //will use this annotation for
+	// getting updated amount
 	public AmountTransferResponse fundTransfer(Long fromAccount, Long toAccount, BigDecimal amount) {
-		log.info("Sending fund transfer ");
+		log.info("Sending fund transfer Starts-- ");
 		try {
 			if (fromAccount < toAccount) {
 				synchronized (fromAccount) {
@@ -49,7 +51,7 @@ public class AmountTransferServiceImpl implements AmountTransferService {
 
 		} catch (Exception e) {
 			log.error("Exception during Fund Transfer", e);
-			throw new AccountBalanceException("Can not Transfer fund ,SomeThing Went Wrong");
+			throw new AccountBalanceException(e.getMessage());
 
 		}
 		AmountTransferResponse amountTransferResponse = new AmountTransferResponse();
@@ -60,15 +62,17 @@ public class AmountTransferServiceImpl implements AmountTransferService {
 	}
 
 	private void validateIsNegativeAmount(BigDecimal amount) {
-		if (BigDecimal.ZERO.compareTo(amount) < 0)
-			throw new AccountBalanceException("Incorrect Amount Entered");
+		if (amount.compareTo(BigDecimal.ZERO) < 0)
+			throw new AccountBalanceException("Incorrect Amount Entered ");
 	}
 
 	public synchronized void withdraw(BigDecimal amount, Long fromAccountoRequest) {
 		validateIsNegativeAmount(amount);
 		Account fromAccount = accountsRepository.getAccount(fromAccountoRequest);
-		if (BigDecimal.ZERO.compareTo(fromAccount.getBalance()) <= 0)
-			throw new AccountBalanceException("insufficient Balance");
+		if (ObjectUtils.isEmpty(fromAccount) || fromAccount.getBalance().compareTo(BigDecimal.ZERO) <= 0) {
+			log.debug("fromAccount Details {}", fromAccount.toString());//will required only for debugging ,not to print account no in logs
+			throw new AccountBalanceException("Insufficient Balance or Failed to Get Account Details");
+		}
 		fromAccount.setBalance(fromAccount.getBalance().subtract(amount));
 		accountsRepository.updateBalance(fromAccount.getAccountId(), fromAccount.getBalance());
 
@@ -77,8 +81,13 @@ public class AmountTransferServiceImpl implements AmountTransferService {
 	public synchronized void deposit(BigDecimal amount, @NotNull Long toAccountNoRequest) {
 		validateIsNegativeAmount(amount);
 		Account toAccount = accountsRepository.getAccount(toAccountNoRequest);
-		toAccount.setBalance(toAccount.getBalance().add(amount));
-		accountsRepository.updateBalance(toAccount.getAccountId(), toAccount.getBalance());
+		if (!ObjectUtils.isEmpty(toAccount)) {
+			toAccount.setBalance(toAccount.getBalance().add(amount));
+			accountsRepository.updateBalance(toAccount.getAccountId(), toAccount.getBalance());
+			return;
+		}
+		log.debug("toAccount Details {}", toAccount.toString());
+		throw new AccountBalanceException("Failed to Get Account or Update Details ");
 	}
 
 	@Async("asyncExecutor")

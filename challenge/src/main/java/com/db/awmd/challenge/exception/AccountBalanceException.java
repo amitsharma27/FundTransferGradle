@@ -10,6 +10,6 @@ public class AccountBalanceException extends RuntimeException implements Seriali
 	private static final long serialVersionUID = 1L;
 
 	public AccountBalanceException(String message) {
-	    super();
+	    super(message);
 	  }
 }

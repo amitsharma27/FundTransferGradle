@@ -19,6 +19,8 @@ public class AmountTransferResponse implements Serializable{
     private String message;
 	
     private int statusCode;
+    
+    private long transactionId;
 
 	public AmountTransferResponse(String message, int statusCode) {
 		super();

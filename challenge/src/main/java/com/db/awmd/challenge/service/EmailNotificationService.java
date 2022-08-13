@@ -19,7 +19,7 @@ public class EmailNotificationService implements NotificationService {
 
 	@Override
 	public void notifyAboutTransferAsync(Long accountNO, BigDecimal amount) {
-		log.info("Sending notification to owner of {}: {}", accountNO, amount);
+		log.info("Sending notification to owner of AccountNo{}: Amount: {}", accountNO, amount);
 
 	}
 

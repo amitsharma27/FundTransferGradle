@@ -11,8 +11,10 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Data;
+import lombok.ToString;
 
 @Data
+@ToString
 public class Account {
 
   @NotNull
@@ -36,4 +38,6 @@ public class Account {
     this.accountId = accountId;
     this.balance = balance;
   }
+  
+  
 }
